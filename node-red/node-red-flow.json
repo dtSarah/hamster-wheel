@@ -1,0 +1,442 @@
+[
+    {
+        "id": "540be41f.5a412c",
+        "type": "tab",
+        "label": "hamster-wheel"
+    },
+    {
+        "id": "c9bab6e1.b5a418",
+        "type": "mqtt in",
+        "z": "540be41f.5a412c",
+        "name": "mqtt subscribe",
+        "topic": "hamster/wheel/#",
+        "qos": "2",
+        "broker": "da4d0dc9.86f3d",
+        "x": 188,
+        "y": 389,
+        "wires": [
+            [
+                "2ff8872e.bfd328"
+            ]
+        ]
+    },
+    {
+        "id": "104ba9dd.d03086",
+        "type": "http request",
+        "z": "540be41f.5a412c",
+        "name": "dynatrace IoT metric request",
+        "method": "POST",
+        "ret": "obj",
+        "url": "https://xxxxxx.live.dynatrace.com/api/v1/entity/infrastructure/custom/hamster-wheel?Api-Token=xxxxxx",
+        "tls": "",
+        "x": 1085,
+        "y": 594,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ac4ae3e2.c9bc1",
+        "type": "function",
+        "z": "540be41f.5a412c",
+        "name": "JSON payload",
+        "func": "var timeseriesId = msg.timeseriesid; \n\nmsg.payload = { \n\t\"series\" : [\n        { \n\t\t\t\"timeseriesId\" : \"custom:hamster.wheel.\"+timeseriesId, \n\t\t  \t\"dimensions\" : {},\n\t\t  \t\"dataPoints\" : [\n\t\t  \t    [msg.timestamp, msg.value]\n\t\t  \t]\n\t    }\n\t]\n};\n\nmsg.headers = {\n    'content-type':'application/json'\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 912,
+        "y": 512,
+        "wires": [
+            [
+                "104ba9dd.d03086"
+            ]
+        ]
+    },
+    {
+        "id": "2ff8872e.bfd328",
+        "type": "change",
+        "z": "540be41f.5a412c",
+        "name": "enrich with timestamp",
+        "rules": [
+            {
+                "t": "set",
+                "p": "value",
+                "pt": "msg",
+                "to": "$number(msg.payload)\t",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "timestamp",
+                "pt": "msg",
+                "to": "",
+                "tot": "date"
+            },
+            {
+                "t": "delete",
+                "p": "retain",
+                "pt": "msg"
+            },
+            {
+                "t": "delete",
+                "p": "qos",
+                "pt": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 315,
+        "y": 467,
+        "wires": [
+            [
+                "a3447645.7eb998"
+            ]
+        ]
+    },
+    {
+        "id": "a3447645.7eb998",
+        "type": "switch",
+        "z": "540be41f.5a412c",
+        "name": "filter metrics",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "hamster/wheel/rotation/speed/km-h",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "hamster/wheel/rotation/speed/rpm",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "hamster/wheel/rotation/duration/sec",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "hamster/wheel/lap/distance/km",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "hamster/wheel/lap/rotation/cnt",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "hamster/wheel/night/distance/km",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "hamster/wheel/night/rotation/cnt",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "hamster/wheel/night/lap/cnt",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "outputs": 8,
+        "x": 354,
+        "y": 581,
+        "wires": [
+            [
+                "36f9e586.001b0a"
+            ],
+            [
+                "8fcd40bf.28c0a"
+            ],
+            [
+                "f934701a.69b26"
+            ],
+            [
+                "63b375fe.0622fc"
+            ],
+            [
+                "b4429d89.7f8a9"
+            ],
+            [
+                "66ba2fb2.f395a"
+            ],
+            [
+                "787dfc84.f4d554"
+            ],
+            [
+                "e8e0cd8f.fe50a"
+            ]
+        ]
+    },
+    {
+        "id": "36f9e586.001b0a",
+        "type": "change",
+        "z": "540be41f.5a412c",
+        "name": "km-h",
+        "rules": [
+            {
+                "t": "set",
+                "p": "timeseriesid",
+                "pt": "msg",
+                "to": "km-h",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 564,
+        "y": 418,
+        "wires": [
+            [
+                "ac4ae3e2.c9bc1"
+            ]
+        ]
+    },
+    {
+        "id": "66ba2fb2.f395a",
+        "type": "change",
+        "z": "540be41f.5a412c",
+        "name": "night: total km",
+        "rules": [
+            {
+                "t": "set",
+                "p": "timeseriesid",
+                "pt": "msg",
+                "to": "night-km",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 585,
+        "y": 704,
+        "wires": [
+            [
+                "ac4ae3e2.c9bc1"
+            ]
+        ]
+    },
+    {
+        "id": "8fcd40bf.28c0a",
+        "type": "change",
+        "z": "540be41f.5a412c",
+        "name": "rpm",
+        "rules": [
+            {
+                "t": "set",
+                "p": "timeseriesid",
+                "pt": "msg",
+                "to": "rpm",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 563,
+        "y": 450,
+        "wires": [
+            [
+                "ac4ae3e2.c9bc1"
+            ]
+        ]
+    },
+    {
+        "id": "f934701a.69b26",
+        "type": "change",
+        "z": "540be41f.5a412c",
+        "name": "sec",
+        "rules": [
+            {
+                "t": "set",
+                "p": "timeseriesid",
+                "pt": "msg",
+                "to": "sec",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 563,
+        "y": 482,
+        "wires": [
+            [
+                "ac4ae3e2.c9bc1"
+            ]
+        ]
+    },
+    {
+        "id": "63b375fe.0622fc",
+        "type": "change",
+        "z": "540be41f.5a412c",
+        "name": "lap: total km",
+        "rules": [
+            {
+                "t": "set",
+                "p": "timeseriesid",
+                "pt": "msg",
+                "to": "lap-km",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 577,
+        "y": 579,
+        "wires": [
+            [
+                "ac4ae3e2.c9bc1"
+            ]
+        ]
+    },
+    {
+        "id": "b4429d89.7f8a9",
+        "type": "change",
+        "z": "540be41f.5a412c",
+        "name": "lap: total rotation cnt",
+        "rules": [
+            {
+                "t": "set",
+                "p": "timeseriesid",
+                "pt": "msg",
+                "to": "lap-rotation-cnt",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 607,
+        "y": 613,
+        "wires": [
+            [
+                "ac4ae3e2.c9bc1"
+            ]
+        ]
+    },
+    {
+        "id": "787dfc84.f4d554",
+        "type": "change",
+        "z": "540be41f.5a412c",
+        "name": "night: total rotation cnt",
+        "rules": [
+            {
+                "t": "set",
+                "p": "timeseriesid",
+                "pt": "msg",
+                "to": "night-rotation-cnt",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 606,
+        "y": 738,
+        "wires": [
+            [
+                "ac4ae3e2.c9bc1"
+            ]
+        ]
+    },
+    {
+        "id": "e8e0cd8f.fe50a",
+        "type": "change",
+        "z": "540be41f.5a412c",
+        "name": "night: total lap cnt",
+        "rules": [
+            {
+                "t": "set",
+                "p": "timeseriesid",
+                "pt": "msg",
+                "to": "night-lap-cnt",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 596,
+        "y": 771,
+        "wires": [
+            [
+                "ac4ae3e2.c9bc1"
+            ]
+        ]
+    },
+    {
+        "id": "9294ffd8.bf2c4",
+        "type": "comment",
+        "z": "540be41f.5a412c",
+        "name": "rotation metrics",
+        "info": "",
+        "x": 594,
+        "y": 386,
+        "wires": []
+    },
+    {
+        "id": "5491f490.3de0ac",
+        "type": "comment",
+        "z": "540be41f.5a412c",
+        "name": "lap metrics",
+        "info": "",
+        "x": 566,
+        "y": 546,
+        "wires": []
+    },
+    {
+        "id": "f3e58a9b.6539e8",
+        "type": "comment",
+        "z": "540be41f.5a412c",
+        "name": "night metrics",
+        "info": "",
+        "x": 575,
+        "y": 672,
+        "wires": []
+    },
+    {
+        "id": "da4d0dc9.86f3d",
+        "type": "mqtt-broker",
+        "z": "",
+        "broker": "mqtt.example.org",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true,
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": ""
+    }
+]
